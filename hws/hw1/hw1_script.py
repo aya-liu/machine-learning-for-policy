@@ -409,3 +409,54 @@ print('2017:', len(mvt17))
 crimes18_tot = crimes[crimes.ward == '43']['2018-01-01':'2018-12-31']
 crimes17_tot = crimes[crimes.ward == '43']['2017-01-01':'2017-12-31']
 (len(crimes18_tot) - len(crimes17_tot)) / len(crimes17_tot) 
+
+
+# ## 3.3 - 3,4 See notebook for writeup
+
+# ## 4A
+
+# Geocode address
+import censusgeocode as cg
+result = cg.onelineaddress('2111 S Michigan Ave, Chicago, IL')
+loc = result[0]['coordinates']
+point = Point(loc['x'], loc['y'])
+
+# Find the block group for using the lat, long of the address
+blocks[blocks.geometry.apply(lambda x: point.within(x))]
+
+# Find crime types for this block group and the probabilities
+call_block = gcrimes[gcrimes.GEOID == '170313301004']
+call_types = call_block.groupby('primary_type').size().sort_values(ascending=False).reset_index()
+call_types.columns = ['crime_type', 'count']
+call_types['probability'] = call_types['count'] / len(call_block)
+call_types
+
+
+# ## 4B
+
+# Match crime reports to community area names 
+gcrimes.drop(columns=['index_right'], inplace=True)
+gcrimes_nbh = gpd.sjoin(gcrimes, gdf, how='left', op='intersects')
+
+# Get thefts in west garfield park, east garfield park and uptown
+thefts = gcrimes_nbh[gcrimes_nbh.primary_type == 'THEFT']
+thefts_gu = thefts.groupby('community').size()[
+            ['WEST GARFIELD PARK', 'EAST GARFIELD PARK', 'UPTOWN']].\
+            reset_index()
+thefts_gu.columns = ['community', 'num_thefts']
+
+# Combine west and east garfield park
+thefts_gu.loc[3, 'community'] = 'GARFIELD PARK'
+thefts_gu.iloc[3, 1:] = thefts_gu.iloc[0, 1:] + thefts_gu.iloc[1, 1:] 
+thefts_gu = thefts_gu.loc[[2,3], :]
+
+# Calculate likelihood
+thefts_gu['likelihood'] = thefts_gu['num_thefts'] / len(thefts)
+thefts_gu.set_index('community', inplace=True)
+thefts_gu
+
+# Calculate difference in likelihood
+thefts_gu.loc['GARFIELD PARK', 'likelihood'] - thefts_gu.loc['UPTOWN', 'likelihood']
+
+# ## 4C. see notebook for writeup
+
