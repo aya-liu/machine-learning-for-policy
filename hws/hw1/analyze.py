@@ -5,6 +5,8 @@ Utility unctions to analyze and plot crime data.
 
 import pandas as pd
 import geopandas as gpd
+import math
+import matplotlib
 import matplotlib.pyplot as plt
 import seaborn as sns
 
@@ -111,10 +113,17 @@ def get_top_blocks(crime_type_data):
     top_blocks = crime_type_data.groupby('GEOID').size(). \
                  sort_values(ascending=False).reset_index()
     top_blocks.columns = ['GEOID', 'count']
+
+    # create a table of population by GEOID
+    # https://stackoverflow.com/a/35268906/1281879
+    pops = crime_type_data.groupby(['GEOID','population']).size().reset_index().rename(columns={0:'number'})
+
+    top_blocks = top_blocks.merge(pops, on='GEOID', how='inner')
+
     return top_blocks
 
 
-def map_blocks(top_blocks, blocks_geodata):
+def map_blocks(top_blocks, blocks_geodata, normalizeByPopulation=True):
     '''
     Generate heat map of crime report counts at block-group level.
 
@@ -122,16 +131,32 @@ def map_blocks(top_blocks, blocks_geodata):
         - top_blocks: DataFrame of block group GEOIDs and crime counts 
         - blocks_geodata: DataFrame containing block roup GEOIDs and 
                           their geometry information
+        - normalizeByPopulation: (bool) whether or not to normalize the plot by population
 
     '''
     # Merge top blocks with geographical information
     top_blocks = top_blocks.merge(blocks_geodata, on='GEOID', how='left')
 
+    # normalize by population
+    if normalizeByPopulation:
+        # remove rows where count or population is 0.
+        # https://stackoverflow.com/a/27020741/1281879
+        top_blocks = top_blocks[(top_blocks != 0).all(1)]
+
+        top_blocks['measure'] = top_blocks['count']/top_blocks['population']
+        plot_title = 'Crimes per person')
+    else:
+        top_blocks['measure'] = top_blocks['count']
+        plot_title = 'Number of crimes')
+
     # Convert to geodataframe
     top_blocks = gpd.GeoDataFrame(top_blocks, geometry='geometry')
 
     # Make heat map of number of crimes
-    top_blocks.plot(figsize=(8, 6), column='count', cmap='OrRd', legend=True)
+    top_blocks.plot(figsize=(8, 6), column='measure', cmap='OrRd', legend=True, norm=matplotlib.colors.LogNorm())
+
+    plt.title(plot_title)
+
     plt.show()
 
 
