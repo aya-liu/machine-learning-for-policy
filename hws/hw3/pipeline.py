@@ -1,13 +1,23 @@
+'''
+Aya Liu
+'''
 
-import pandas as pd
-import matplotlib.pyplot as plt
+
 from IPython.display import display
-import explore
-import learn
-import evaluate
+import numpy as np
+import pandas as pd
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.svm import LinearSVC
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier, BaggingClassifier
+from sklearn import model_selection
+from sklearn import metrics
+import matplotlib.pyplot as plt
+import explore_utils
 
 
-##### read #####
+########## read ##########
 
 def read_data(data_file, coltypes=None, parse_dates=None):
 	'''
@@ -18,7 +28,7 @@ def read_data(data_file, coltypes=None, parse_dates=None):
 	return df
 
 
-##### explore #####
+########## explore ##########
 
 def explore_data(group, num_vars, cat_vars, data):
     '''
@@ -31,7 +41,7 @@ def explore_data(group, num_vars, cat_vars, data):
     explore.summarize_missing(data)
 
 
-##### pre-process #####
+########## pre-process ##########
 
 def summarize_na(data):
 
@@ -57,7 +67,7 @@ def fill_na_with_median(data):
     return data.fillna(cols_na)
 
 
-##### generate features #####
+########## generate features ##########
 
 def visualize_num_distr(varname, target, data, bins):
     '''
@@ -105,27 +115,158 @@ def convert_to_dummy(data, cols_to_convert, dummy_na=True):
     return pd.get_dummies(data, dummy_na=dummy_na, columns=cols_to_convert)
 
 
-### build classifier
+########## build classifier ##########
+
+##### split data #####
+
+def get_feature_cols(target, data_dummies):
+
+    # drop NaN dummies for non-NaN variables
+    data_dummies = data_dummies.loc[:, (data_dummies != 0).any(axis=0)]
+
+    # select a vector of features
+    cols = data_dummies.columns.to_list()
+    feat_cols = cols[cols.index(target)+1:]
+
+    return feat_cols
 
 
-
-
-
-### evaluate classifer
-
-def evaluate_accuracy(y_test, y_pred):
+def train_test_split(target, feat_cols, data, 
+                     test_size=0.25, train_size=None, random_state=None,
+                     shuffle=True, stratify=None):
     '''
-    Calculates the model accuracy score.
-    
-    Input:
-        y_test: (array)  test set of data points
-        y_pred: (array) predicted values of data points
+    splits data into training and testing sets.
 
-    Returns (float): model accuracy score
+    Inputs:
+        target: (str) the target variable
+        feat_cols: (list) a list of feature variable names
+        data: (dataframe) the dataframe
+        optional parameters: see sklearn.model_selection.train_test_split
     
+    Returns: x_train, x_test, y_train, y_test 
+
     '''
+    # split dataset in features and target variable
+    X = data[feat_cols]
+    y = data[target]
 
-    return metrics.accuracy_score(y_test, y_pred)
+    # Split dataset into training set and test set
+    return model_selection.train_test_split(
+                                       X, y, 
+                                       test_size=test_size, 
+                                       train_size=train_size,
+                                       random_state=random_state,
+                                       shuffle=shuffle,
+                                       stratify=stratify)
+def temporal_train_test_split():
+    pass
+
+
+##### build models #####
+
+CLFS = {
+    'DecTree': {
+        'clf': DecisionTreeClassifier(),
+        'paramgrid': {'max_depth': [3, 10, 20, 50]},
+    },
+    'KNN': {
+        'clf': KNeighborsClassifier(),
+        'paramgrid': {'n_neighbors': [5, 15, 50], 
+                         'weights': ['uniform', 'distance']} 
+    },
+    'LogReg': {
+        'clf': LogisticRegression(),
+        'paramgrid': {'penalty': ['l1', 'l2']} 
+    },      
+    'RanFor': {
+        'clf': RandomForestClassifier(),
+        'paramgrid': {} 
+    },
+    'Boosting': {
+        'clf': GradientBoostingClassifier(),
+        'paramgrid': {} 
+    },
+    'Bagging': {
+        'clf': BaggingClassifier(),
+        'paramgrid': {} 
+    },
+    
+}
+
+SVM = {'clf': LinearSVC(),
+       'paramgrid': {'C': [10**-1, 1 , 10]}}            
+
+
+def fit_and_predict(clf, x_train, y_train, x_test, plot=False):
+    '''
+    '''
+    clf = clf.fit(x_train, y_train) # train
+    pred_scores = clf.predict_proba(x_test) # test
+
+    if plot:
+        plt.hist(pred_scores[:,1])
+        plt.title("Scores on test set")
+    return pred_scores
+
+
+def build_classifiers(models_to_build):
+    results = {}
+    for model in models_to_build:
+
+
+        pass
+
+
+
+
+########## evaluate classifers ##########
+
+def temporal_validation():
+    pass
+
+
+def get_eval_metric(pred_scores, y_test, metrics, population_percent=None, 
+                    thresholds=None):
+
+    print("Baseline: The true number of YES in test data is {}/{} ({:.2f}%)\n".format(
+          sum(y_test), len(y_test), 100.*sum(y_test)/len(y_test)))
+    
+    if (thresholds == None) and (population_percent == None):
+            raise Exception('ValueError: must have thresholds or \
+                            population_percent')
+
+    elif thresholds and population_percent:
+            raise Exception('Cannot have both thresholds and \
+                            population_percent')
+
+    elif population_percent:
+            # calculate score thresholds for top p% of population
+            thresholds = []
+            for p in population_percent:
+                thresholds.append(np.percentile(pred_scores, (1-p)*100))
+
+    # initialize dict for metric scores
+    d = {'population_percent': population_percent,
+         'score_threshold': thresholds}
+
+    # calcualte evaluation metrics at various thresholds 
+    for m in metrics:
+        name = m.__name__[:-6]
+        scores = []
+
+        for k in thresholds:
+            # assign classification at threshold k
+            pred_label = [1 if x[1] > k else 0 for x in pred_scores]
+            num_pred_1 = sum(pred_label)
+
+            # calculate evaluation metric at threshold k
+            score_at_k =  m(pred_label, y_test)
+            scores.append(score_at_k)
+
+        d[name] = scores
+    
+    results = pd.DataFrame(d)
+    return results
 
 
 
