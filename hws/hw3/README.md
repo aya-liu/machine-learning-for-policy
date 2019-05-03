@@ -3,7 +3,7 @@ Homework 3: Improving the machine learning pipeline
 Aya Liu 5/2/2019
 
 To refine the machine learning pipeline to allow for:
-- building a number of models with different parameters
+- building a number of models (DecisionTree, K-NearestNeighbor, LogisticRegression, RandomForest, GradientBoosting, Bagging) with different parameters
 - temporal validation
 - computing and visualizing evaluation metrics at k% population
 
@@ -18,9 +18,13 @@ See [hw3-report.pdf](https://github.com/aya-liu/machine-learning-for-policy/blob
 
 Dependencies
 ---
-Set up virtual environment with venv
-`python3 -m venv venv`
-`source ./venv/bin/activate`
+Set up virtual environment
+```
+python3 -m venv venv
+source ./venv/bin/activate
+```
 
 Install packages specified in requirements.txt
-`pip -r install requirements.txt`
+```
+pip -r install requirements.txt
+```
