@@ -374,10 +374,6 @@ def plot_roc_curve(fpr, tpr):
     plt.show()
 
 
-
-# def compare_auc()
-
-
 def organize_models_by_set_by_type(models, n_sets):
     '''
     models: list of dicts
@@ -499,21 +495,27 @@ def compare_metrics_across_types(by_set_by_type, metric_name, y_range, figsize=(
 
 
 
-# def lineplot_metrics(metrics_df, x, y, ax, legend=True):
-# '''
-#     metrics_df: the dataframe returned by get_eval_metrics()
-#     x: str 
-#     y: str or list from "accuracy", "precision", "recall", or "baseline"
-#     '''
-#     if type(y) == str:
-#         y = [y]
-#     metrics_df[[x]+y].plot(x=x, ax=ax, legend=legend)
-
+def plot_precision_recall(model, show_baseline=True, figsize=(8,6)):
     '''
     Shortcut function to plot precision and recall with x-axis of the top 
     % population that are classified as 1.
 
     '''
-    # if show_baseline:
-    #     keys.append('baseline')
+    x = 'population_percent'
+    y_list = ['precision', 'recall']
+    if show_baseline:
+        y_list.append('baseline')
+
+    fig = plt.figure(figsize=figsize)
+    ax = fig.add_subplot(111)
+    for y in y_list:
+        plt.plot(model[x], model[y], label=y)
+    
+    plt.legend()
+    plt.title("Precision-Recall at k% Population")
+    plt.show()
+
+
+
+
 
