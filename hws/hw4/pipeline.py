@@ -39,9 +39,9 @@ class Pipeline:
                        'subsample' : [0.1,0.5,1.0], 'max_depth': [1,3,5,10,20,50,100]},
                 'NB' : {},
                 'DT': {'max_depth': [1,5,10,20,50,100], 'min_samples_split': [2,5,10]},
-                'SVM' :{'C' :[0.00001,0.0001,0.001,0.01,0.1,1,10],'kernel':['linear']},
-                'KNN' :{'n_neighbors': [1,5,10,25,50,100],'weights': ['uniform','distance'],
-                        'algorithm': ['auto','ball_tree','kd_tree']}
+                # 'SVM' :{'C' :[0.00001,0.0001,0.001,0.01,0.1,1,10],'kernel':['linear']},
+                # 'KNN' :{'n_neighbors': [1,5,10,25,50,100],'weights': ['uniform','distance'],
+                #         'algorithm': ['auto','ball_tree','kd_tree'], 'n_jobs': [-1]}
                 }
     
     SMALL_GRID = { 
@@ -55,9 +55,9 @@ class Pipeline:
                        'subsample' : [0.1,0.5,1.0], 'max_depth': [5,50]},
                 'NB' : {},
                 'DT': {'max_depth': [1,5,10,20,50,100], 'min_samples_split': [2,5,10]},
-                'SVM' :{'C' :[0.00001,0.0001,0.001,0.01,0.1,1,10],'kernel':['linear']},
-                'KNN' :{'n_neighbors': [1,5,10,25,50,100], 'weights': ['uniform','distance'],
-                        'algorithm': ['auto','ball_tree','kd_tree']}
+                # 'SVM' :{'C' :[0.00001,0.0001,0.001,0.01,0.1,1,10],'kernel':['linear']},
+                # 'KNN' :{'n_neighbors': [1,5,10,25,50,100], 'weights': ['uniform','distance'],
+                #         'algorithm': ['auto','ball_tree','kd_tree'], 'n_jobs': [-1]}
                 }
         
     TEST_GRID = { 
@@ -71,7 +71,7 @@ class Pipeline:
                 'NB' : {},
                 'DT': {'max_depth': [1], 'min_samples_split': [10]},
                 # 'SVM' :{'C' :[0.01], 'kernel':['linear']},
-                'KNN' :{'n_neighbors': [5],'weights': ['uniform'], 'algorithm': ['auto']}
+                # 'KNN' :{'n_neighbors': [5],'weights': ['uniform'], 'algorithm': ['auto'], 'n_jobs': [-1]}
                 }    
 
     def __init__(self):
@@ -95,7 +95,7 @@ class Pipeline:
                     'GB': GradientBoostingClassifier(learning_rate=0.05, subsample=0.5, max_depth=6, n_estimators=10),
                     'NB': GaussianNB(),
                     'DT': DecisionTreeClassifier(),
-                    'KNN': KNeighborsClassifier(n_neighbors=3) 
+                    # 'KNN': KNeighborsClassifier(n_neighbors=3) 
                         }
 
     def load_clean_data(self, df):
@@ -212,23 +212,19 @@ class Pipeline:
 
                 # 3) loop over classifier types
                 for model_type, clf in self.clfs.items():
-
                     if debug:
                         print('#### {}'.format(model_type))
-
                     # 4) loop over parameter combinations
                     for params in ParameterGrid(self.paramgrid[model_type]):
-
                         if debug:
-                            print('\t{}'.format(params))
-
+                            print('{}'.format(params))
                         m = self.build_model(clf, X_train, y_train, X_test, y_test, params, N, i, 
                             model_type, predictor_cols, label, output_dir, output_filename, thresholds, 
                             ks, save_output)
                         model_results[N][i] = m
 
                         if debug:
-                            print('\t---model results saved---')
+                            print('---model results saved---')
 
                         i += 1
             N += 1
@@ -251,7 +247,7 @@ class Pipeline:
         m = Model(clf, X_train, y_train, X_test, y_test, params, N, i, model_type, 
                   predictors, label, output_dir, thresholds, ks)
         # build
-        m.fit_and_predict(debug=True)
+        m.fit_and_predict()
         # evaluate
         m.populate_evalutaions(output_filename)
         m.plot_roc(save_output)
