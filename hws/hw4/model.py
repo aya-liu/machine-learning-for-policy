@@ -12,22 +12,16 @@ import random
 import pandas as pd
 import numpy as np
 import pylab as pl
-import itertools
 import matplotlib.pyplot as plt
 from sklearn import model_selection, metrics
 from sklearn.metrics import roc_auc_score, roc_curve, auc, classification_report, confusion_matrix
 from sklearn.metrics import precision_recall_curve, precision_score, recall_score, accuracy_score
-# from sklearn.ensemble import RandomForestClassifier, ExtraTreesClassifier, GradientBoostingClassifier, AdaBoostClassifier
-# from sklearn.linear_model import LogisticRegression, Perceptron, SGDClassifier, OrthogonalMatchingPursuit, RandomizedLogisticRegression
-# from sklearn.neighbors.nearest_centroid import NearestCentroid
-# from sklearn.naive_bayes import GaussianNB, MultinomialNB, BernoulliNB
-# from sklearn.tree import DecisionTreeClassifier
-# from sklearn.neighbors import KNeighborsClassifier
+
 
 class Model:
 
     def __init__(self, clf, X_train, y_train, X_test, y_test, params, N, iteration, model_type, 
-                 features, label, output_dir, thresholds=[], ks=[]):
+                 predictors, label, output_dir, thresholds=[], ks=[]):
         '''
         Constructor for a Model.
 
@@ -39,7 +33,7 @@ class Model:
             N: (int)
             iteration: (int)
             model_type: (str) model type acronym
-            features:
+            predictors:
             label:
             output_dir: output directory
             thresholds: (optional list of floats between 0 and 1) probability score thresholds. 
@@ -57,8 +51,8 @@ class Model:
         self.params = params
         self.N = N
         self.iteration = iteration
+        self.predictors = predictors
         self.model_type = model_type
-        self.features = features
         self.label = label
         self.thresholds = thresholds
         self.ks = ks
@@ -84,9 +78,10 @@ class Model:
         self.clf.set_params(**self.params)
         if debug:
             print("set params")
+            print(self.clf)
 
         # fit and predict
-        self.y_scores = self.clf.fit(self.X_train,self.y_train).predict_proba(self.X_test)[:,1]
+        self.y_scores = self.clf.fit(self.X_train, self.y_train).predict_proba(self.X_test)[:,1]
         if debug:
             print("generated prediction scores")
 
@@ -237,8 +232,8 @@ class Model:
 
         with open(output_filepath, mode) as f:
             result = '"{0}-{1}", "{2}", "{3}", "{4}", "{5}", "{6}", "{7}", "{8}", "{9}", "{10}"\n'.format(
-                self.N, self.iteration, self.label, self.model_type, self.iteration, self.roc_auc, cutoff,
-                precision, recall, accuracy, self.params)
+                self.N, self.iteration, self.label, self.model_type, self.roc_auc, cutoff,
+                precision, recall, accuracy, self.params, self.predictors)
             f.write(result)
 
     def accuracy_at_k(self, y_true, y_scores, k):
@@ -307,7 +302,7 @@ class Model:
         return test_predictions_binary
 
     ######## Plot ########
-    def plot_roc(self, output_type=None):
+    def plot_roc(self, save_output=True):
         '''
         Plot ROC curve for the Model.
 
@@ -315,17 +310,18 @@ class Model:
             name: (str) plot title
             y_scores: (list) predicted scores
             y_true: (list) y_true from test set
-            output_type: (str) optional, 'save' to save fig or None to show fig only.  
-                         Default=None
+            save_output: (str) optional, True to save fig or False to show fig only.  
+                         Default=True
         '''
         # get false postive rates and true positive rates
         fpr, tpr, _ = roc_curve(self.y_test, self.y_scores)
 
-        # get AUC score if not already calculated
+        # get AUC score
         if not self.roc_auc:
             self.roc_auc = auc(fpr, tpr)
 
         # plot roc curve
+        plt.clf()
         pl.plot(fpr, tpr, label='ROC curve (area = %0.2f)' % self.roc_auc)
         pl.plot([0, 1], [0, 1], 'k--')
         pl.xlim([0.0, 1.05])
@@ -337,13 +333,13 @@ class Model:
         pl.legend(loc="lower right")
 
         # save fig if applicable
-        if (output_type == 'save'):
+        if save_output:
             filename = "roc_{}-{}_{}".format(self.N, self.iteration,self.model_type)
             plt.savefig("{}/{}".format(self.output_dir, filename))
         else:
             plt.show()
 
-    def plot_precision_recall_curve(self, output_type=None):
+    def plot_precision_recall_curve(self, save_output=True):
         '''
         Plot precision recall at n
 
@@ -351,8 +347,8 @@ class Model:
             model_name: (str)
             y_scores: (list) predicted scores
             y_true: (list) y_true from test set
-            output_type: (str) optional, 'save' to save fig or None to show fig only.  
-                         Default=None
+            save_output: (str) optional, True to save fig or False to show fig only.  
+                         Default=True
         '''
         # get precision curve, recall curve, and the corresponding probability thresholds 
         precision_curve, recall_curve, pr_thresholds = precision_recall_curve(self.y_test, self.y_scores)
@@ -384,25 +380,13 @@ class Model:
         plt.title(title)
 
         # save fig if applicable
-        if (output_type == 'save'):
+        if save_output:
             filename = "precision-recall_{}-{}_{}".format(self.N, self.iteration,self.model_type)
             plt.savefig("{}/{}".format(self.output_dir, filename))
         else:
             plt.show()
 
 #### Helper functions
-def get_subsets(l):
-    '''
-    Get all subsets of the list l
-
-    Input: l (list)
-    Returns: subsets (list of lists)
-    '''
-    subsets = []
-    for i in range(1, len(l) + 1):
-        for combo in itertools.combinations(l, i):
-            subsets.append(list(combo))
-    return subsets
 
 def joint_sort_descending(l1, l2):
     '''
