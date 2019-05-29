@@ -13,6 +13,7 @@ import pandas as pd
 import numpy as np
 import pylab as pl
 import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from sklearn import model_selection, metrics
 from sklearn.metrics import roc_auc_score, roc_curve, auc, classification_report, confusion_matrix
@@ -314,8 +315,6 @@ class Model:
             save_output: (str) optional, True to save fig or False to show fig only.  
                          Default=True
         '''
-        matplotlib.use('Agg')
-
         # get false postive rates and true positive rates
 
         fpr, tpr, _ = roc_curve(self.y_test, self.y_scores)
@@ -354,8 +353,6 @@ class Model:
             save_output: (str) optional, True to save fig or False to show fig only.  
                          Default=True
         '''
-        matplotlib.use('Agg')
-
         # get precision curve, recall curve, and the corresponding probability thresholds 
         precision_curve, recall_curve, pr_thresholds = precision_recall_curve(self.y_test, self.y_scores)
         precision_curve = precision_curve[:-1]
