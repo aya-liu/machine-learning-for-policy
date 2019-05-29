@@ -18,7 +18,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.naive_bayes import GaussianNB
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.neighbors import KNeighborsClassifier
-import data_explore as explore
+# import data_explore as explore
 import data_preprocess as preprocess
 from model import *
 
@@ -378,20 +378,20 @@ def read_csv(data_filepath, coltypes=None, parse_dates=None):
     return pd.read_csv(data_filepath, dtype=coltypes, parse_dates=parse_dates)
 
 
-def explore_data(df, label, num_vars=None, cat_vars=None):
-    '''
-    Explore distribution of numerical and categorical variables
-    and missing data. Show tables and plots.
+# def explore_data(df, label, num_vars=None, cat_vars=None):
+#     '''
+#     Explore distribution of numerical and categorical variables
+#     and missing data. Show tables and plots.
 
-    Inputs: 
-        num_vars (optional list): column names of numerical vars
-        cat_vars (optional list): column names of categorical vars
-    '''
-    if num_vars:
-        explore.explore_num_vars(label, num_vars, df)
-    if cat_vars:
-        explore.explore_cat_vars(label, cat_vars, df)
-    explore.summarize_missing(df)
+#     Inputs: 
+#         num_vars (optional list): column names of numerical vars
+#         cat_vars (optional list): column names of categorical vars
+#     '''
+#     if num_vars:
+#         explore.explore_num_vars(label, num_vars, df)
+#     if cat_vars:
+#         explore.explore_cat_vars(label, cat_vars, df)
+#     explore.summarize_missing(df)
 
 
 def get_subsets(l):
