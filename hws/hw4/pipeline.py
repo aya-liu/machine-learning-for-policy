@@ -533,5 +533,6 @@ def convert_to_dummy(data, col, add_other):
     dummies = pd.get_dummies(data[col], prefix=col, dummy_na=True)
     if add_other:
         col_other = '{}_other'.format(col)
-        dummies[col_other] = 0
+        if col_other not in dummies.columns:
+            dummies[col_other] = 0
     return dummies

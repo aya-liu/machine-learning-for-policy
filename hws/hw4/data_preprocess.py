@@ -3,8 +3,31 @@ pre-processing functions
 
 (dataset-specific)
 '''
-
+import numpy as np
 import pandas as pd
+
+def pre_pipeline_clean(df):
+
+	# Data preparation
+	## Generate outcome variable
+	df['time_till_funded'] = (df.datefullyfunded - df.date_posted).apply(lambda x: x.days)
+	df['not_funded_wi_60d'] = np.where(df.time_till_funded > 60, 1, 0)
+
+	# keep only top values of selected columns
+	top_school_city = ['Los Angeles', 'Chicago', 'Houston', 'Brooklyn', 'Bronx']
+	top_school_state = ['CA', 'NY', 'TX', 'FL', 'IL']
+	top_school_dist = ['Los Angeles Unif Sch Dist', 'New York City Dept Of Ed',
+	                   'Philadelphia City School Dist', 'Miami-dade Co Public Sch Dist', 
+	                   'Clark Co School District', 'Charlotte-mecklenburg Sch Dist',
+	                   'San Francisco Unified Sch Dist']
+	top_school_county = ['Los Angeles', 'Orange', 'Cook', 'Harris', 'Kings (Brooklyn)', 'Alameda']
+
+	keep_top_values(df, 'school_city', top_school_city)
+	keep_top_values(df, 'school_state', top_school_state)
+	keep_top_values(df, 'school_district', top_school_dist)
+	keep_top_values(df, 'school_county', top_school_county)
+
+	return df
 
 def preprocess(X, y):
 	'''
@@ -36,3 +59,10 @@ def predictors_to_discretize():
 								[0, 300, 600, 900, 1200, float('inf')],
 								['<300', '300-600', '600-900', '900-1200', '>1200'])}
 	return rv
+
+def keep_top_values(df, col_name, top_values):
+    '''
+    col_name: column name
+    top_values: list of top values of the column to keep
+    '''
+    df[col_name].where(df[col_name].isin(top_values), other="other", inplace=True)
