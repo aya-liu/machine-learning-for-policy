@@ -7,8 +7,7 @@ Aya Liu
 
 from __future__ import division
 import os
-import time
-import random
+import csv
 import pandas as pd
 import numpy as np
 import matplotlib
@@ -176,6 +175,36 @@ class Model:
 
         return precision, recall, accuracy
 
+    def model_eval_to_file(self, cutoff, metrics, output_filename='evaluations.csv', mode='a'):
+        '''
+        Writes evaluation metrics to file.
+
+        Input:
+            cutoff: (float between 0 and 1) threshold or k for metric
+            metrics: (tuple of floats) precision, recall, and accuracy scores
+            output_filename: (optional str): evaluation output filename. default='evaluations.csv'
+            mode: (optional str): file handling mode, 'a' for addition, 'w' for writing. default='a'
+
+        File Columns:
+        model_id( N-iteration), label, model_type, iteration, AUC, cutoff (k or threshold), 
+        precision, recall, accuracy, params
+        '''
+        precision, recall, accuracy = metrics
+        output_filepath = os.path.join(self.output_dir, output_filename)
+        row = ["{}-{}".format(self.N, self.iteration), self.N, self.iteration, self.label, 
+               self.model_type, self.roc_auc, cutoff, precision, recall, accuracy, self.params, 
+               self.predictors]
+       
+        with open(output_filepath, mode) as csvFile:
+            writer = csv.writer(csvFile)
+            writer.writerow(row)
+            csvFile.close()
+
+        #     result = '"{0}-{1}", "{2}", "{3}", "{4}", "{5}", "{6}", "{7}", "{8}", "{9}", "{10}"\n'.format(
+        #         self.N, self.iteration, self.label, self.model_type, self.roc_auc, cutoff,
+        #         precision, recall, accuracy, self.params, self.predictors)
+        #     f.write(result)
+
     def clear_metrics(self, filepath_to_remove=None):
         '''
         Clear precision, recall, and accuracy attributes.
@@ -215,28 +244,6 @@ class Model:
         '''
         self.ks = ks
 
-    def model_eval_to_file(self, cutoff, metrics, output_filename='evaluations.csv', mode='a'):
-        '''
-        Writes evaluation metrics to file.
-
-        Input:
-            cutoff: (float between 0 and 1) threshold or k for metric
-            metrics: (tuple of floats) precision, recall, and accuracy scores
-            output_filename: (optional str): evaluation output filename. default='evaluations.csv'
-            mode: (optional str): file handling mode, 'a' for addition, 'w' for writing. default='a'
-
-        File Columns:
-        model_id( N-iteration), label, model_type, iteration, AUC, cutoff (k or threshold), 
-        precision, recall, accuracy, params
-        '''
-        precision, recall, accuracy = metrics
-        output_filepath = self.output_dir + '/' + output_filename
-
-        with open(output_filepath, mode) as f:
-            result = '"{0}-{1}", "{2}", "{3}", "{4}", "{5}", "{6}", "{7}", "{8}", "{9}", "{10}"\n'.format(
-                self.N, self.iteration, self.label, self.model_type, self.roc_auc, cutoff,
-                precision, recall, accuracy, self.params, self.predictors)
-            f.write(result)
 
     def accuracy_at_k(self, y_true, y_scores, k):
         '''

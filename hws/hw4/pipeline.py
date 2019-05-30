@@ -4,6 +4,7 @@ Class for a ML pipeline
 Aya Liu
 '''
 from __future__ import division
+import os
 import numpy as np
 import pandas as pd
 import itertools
@@ -141,6 +142,7 @@ class Pipeline:
         '''
         if debug:
             print('START')
+            print('GRID SIZE = {}'.format(grid_size))
 
         # load data
         self.load_clean_data(df)
@@ -157,10 +159,12 @@ class Pipeline:
         N = 0
         model_results = {}
         # initialize output file
-        headers = ['model_id', 'label', 'model_type', 'roc_auc', 'k',
+        if not os.path.exists(output_dir):
+            os.mkdir(output_dir)
+        output_path = os.path.join(output_dir, output_filename)
+        headers = ['model_id', 'N_split', 'i', 'label', 'model_type', 'roc_auc', 'k',
                 'precision', 'recall', 'accuracy', 'params', 'predictors']
-        output_path = '{}/{}'.format(output_dir, output_filename)
-        pd.DataFrame(columns=headers).to_csv(output_path)
+        pd.DataFrame(columns=headers).to_csv(output_path, index=False)
 
         if debug:
             print("set up done. output: {}".format(output_path))
@@ -212,7 +216,7 @@ class Pipeline:
                 # 3) loop over classifier types
                 for model_type, clf in self.clfs.items():
                     if debug:
-                        print('#### {}'.format(model_type))
+                        print('#### {}-{}: {}'.format(N, i, model_type))
                     # 4) loop over parameter combinations
                     for params in ParameterGrid(self.paramgrid[model_type]):
                         if debug:
