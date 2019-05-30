@@ -345,7 +345,7 @@ class Model:
         # save fig if applicable
         if save_output:
             filename = "roc_{}-{}_{}".format(self.N, self.iteration,self.model_type)
-            plt.savefig("{}/{}".format(self.output_dir, filename))
+            plt.savefig(os.path.join(self.output_dir, filename))
         else:
             plt.show()
 
@@ -392,7 +392,7 @@ class Model:
         # save fig if applicable
         if save_output:
             filename = "precision-recall_{}-{}_{}".format(self.N, self.iteration,self.model_type)
-            plt.savefig("{}/{}".format(self.output_dir, filename))
+            plt.savefig(os.path.join(self.output_dir, filename))
         else:
             plt.show()
 
@@ -407,10 +407,3 @@ def joint_sort_descending(l1, l2):
     '''
     idx = np.argsort(l1)[::-1]
     return l1[idx], l2[idx]
-
-
-
-
-
-
-
