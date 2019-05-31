@@ -12,7 +12,7 @@ python3 main.py <data_filepath> <output_directory> <grid_size> <debug>
 
 Analysis
 --
-`hw4-notebook.html` contains the analysis using the machine learning pipeline for predicting underfunded education projects.
+`hw4-notebook.ipynb` contains the analysis using the machine learning pipeline for predicting underfunded education projects.
 
 Files
 ---
