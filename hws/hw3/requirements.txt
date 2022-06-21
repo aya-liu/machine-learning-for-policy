@@ -39,7 +39,7 @@ MarkupSafe==1.1.1
 matplotlib==3.0.3
 missingno==0.4.1
 munch==2.3.2
-numpy==1.16.2
+numpy==1.22.0
 pandas==0.24.2
 parso==0.4.0
 patsy==0.5.1
