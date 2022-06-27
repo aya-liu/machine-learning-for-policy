@@ -59,7 +59,7 @@ pytz==2019.1
 PyYAML==5.1
 pyzmq==18.0.1
 ratelim==0.1.6
-reportlab==3.5.21
+reportlab==3.5.55
 requests==2.21.0
 requests-toolbelt==0.9.1
 Rtree==0.8.3
